@@ -15,11 +15,9 @@ load("~/Desktop/smoke.RData")
 ```
 
 
-# Question 1: Affairs
+# Question 1: Affairs. Use the Affairs dataset to address the research question if having children has an effect on the chances of men and women having extramarital affairs.
 
-
-
-### Report:
+### Report explaining my methods:
 
 I used the 'Affairs' dataset which collected data from 600 married readers. The question of interest concerned whether having children had an effect on the chances that men and women would have affairs.
 
@@ -83,7 +81,7 @@ knitr::kable(cbind(final_males), digits = 2, format = "pandoc", caption="Odds fo
 ```
 
 
-### Media Article:
+### Conclusion:
 
 Recent findings from a study at the University of Toronto may be a surprise to many. The study used data from 600 married readers to study if an individual's sex and whether they have children were significant influences on ever having had an affair. It is often perpetuated by the media and stereotypes that becoming a mother makes a woman less likely to cheat, while becoming a father drives a man to be more likely. Contrary to popular belief, the findings showed that sex and having children were *not* significant factors on the odds of having an affair! Whereas other variables that are often overlooked, such as how long one has been married for and how religious they are, *did* have a significant impact on the odds of having an affair as revealed by the study! This is an interesting example of how common conceptions about society may be based on fallacious reasoning.
 
@@ -162,88 +160,3 @@ Output from the  `Table 4: Smokers Model Summary`  allowed me to interpret resul
  
 
 
-# Appendix:
-
-## Question 1 Code:
-```{r appendix, echo=TRUE, results=FALSE}
-
-# Centering and factoring variables
-Affairs$ever = Affairs$affairs > 0
-Affairs$religious = factor(Affairs$religiousness,
-                           levels=c(2,1,3,4,5), labels=c('no','anti','low','med','high'))
-Affairs$aged = Affairs$age - 32
-
-# Fitting GLM model  
-affairsmodel = (glm(ever ~ children:gender + aged + yearsmarried + 
-                      religious, data=Affairs, family = 'binomial' ))
-                       
-logoddsaffairs = cbind(est=affairsmodel$coef, confint(affairsmodel, level = 0.95))
-
-# Exponentiating model to undo logit link and to interpret
-oddsaffairs = exp(logoddsaffairs)
-oddsaffairs[1, ] = oddsaffairs[1, ]/(1 + oddsaffairs[1, ])
-rownames(oddsaffairs)[1] = "Baseline Prob"
-knitr::kable(oddsaffairs, digits = 3, format = "pandoc",
-             caption="Affairs Model Summary") 
-
-
-# Creating odds ratio tables of men and women to interpret interaction term
-coefss= affairsmodel$coef[1:10]
-varss= vcov(affairsmodel)[1:10,1:10]
-FemalenoKids=c(1,0,0,0,0,0,0,1,0,0)
-FemaleyesKids=c(1,0,0,0,0,0,0,0,1,0)
-MalenoKids=c(1,0,0,0,0,0,0,0,0,1)
-MaleyesKids=c(1,0,0,0,0,0,0,0,0,0)
-FemaleRatio=FemalenoKids-FemaleyesKids
-femaless <- t(FemaleRatio) %*% coefss
-estims_female<-drop(femaless) 
-se_female <- sqrt(drop(t(FemaleRatio) %*% varss %*% FemaleRatio))
-final_females <- exp(estims_female+c(Estimate=0,Lower=-2,Upper=2)*se_female)
-knitr::kable(cbind(final_females), digits = 2, 
-             format = "pandoc", caption="Odds for women without and with children")
-MaleRatio=MalenoKids-MaleyesKids
-maless <- t(MaleRatio) %*% coefss
-estims_male<-drop(maless) 
-se_male <- sqrt(drop(t(MaleRatio) %*% varss %*% MaleRatio))
-final_males <- exp(estims_male+c(Estimate=0,Lower=-2,Upper=2)*se_male)
-knitr::kable(cbind(final_males), digits = 2, format = "pandoc",
-             caption="Odds for men without and with children")
-
-```
-
-## Question 2 Code:
-
-```{r question 2 appendix, echo=TRUE, results=FALSE}
-
-# Removing 9 year old data and re centering age
-smokeSub = smoke[which(smoke$Age >= 10), ]
-smokeSub$aged <- smokeSub$Age - 16
-
-# Fitting GLM model
-model1 <- (glm(ever_cigars_cigarillos_or ~ Sex + Race + aged + 
-                 RuralUrban,family='binomial',data=smokeSub))
-
-logoddssmokers = cbind(est=model1$coef, confint(model1, level = 0.95))
-
-oddssmokers = exp(logoddssmokers)
-oddssmokers[1, ] = oddssmokers[1, ]/(1 + oddssmokers[1, ])
-rownames(oddssmokers)[1] = "Baseline Prob"
-knitr::kable(cbind(oddssmokers), digits = 3, format = "pandoc", 
-             caption = "Smokers Model Summary")
-
-smokeSub = smoke[which(smoke$Age >= 10), ]
-# Creating a smaller dataset with just the variables we need
-smallersmokesub = na.omit(smokeSub[, c("Sex", "Age", "Race", 
-                                       "RuralUrban", "ever_ecigarette")])
-smallersmokesub$aged <- smallersmokesub$Age - 16
-
-# Creating two nested models
-model1 <- (glm(ever_ecigarette ~ Sex + Race + aged + RuralUrban,family='binomial',
-               data=smallersmokesub))
-
-model2 <- (glm(ever_ecigarette ~  Race + aged + RuralUrban,family='binomial',
-               data=smallersmokesub))
-# Running likelihood ratio test
-knitr::kable(lrtest(model1, model2), digits = 3, format = "pandoc", 
-             caption = "Likelihood Test Results")
-```
