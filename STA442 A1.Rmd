@@ -15,22 +15,30 @@ load("~/Desktop/smoke.RData")
 ```
 
 
-# Question 1: Affairs. Use the Affairs dataset to address the research question if having children has an effect on the chances of men and women having extramarital affairs.
+# Question 1: Affairs. Use the Affairs dataset to address the research question/
+# if having children has an effect on the chances of men and women having extramarital affairs.
 
 ### Report explaining my methods:
 
-I used the 'Affairs' dataset which collected data from 600 married readers. The question of interest concerned whether having children had an effect on the chances that men and women would have affairs.
+I used the 'Affairs' dataset which collected data from 600 married readers. The question of interest
+concerned whether having children had an effect on the chances that men and women would have affairs.
 
-I used a generalized linear model called `affairsmodel`, with a Bernoulli distribution. Each response follows a Binomial distribution, since the response variable is whether or not they have ever had an affair. The model can be described as follows:
+I used a generalized linear model called `affairsmodel`, with a Bernoulli distribution. Each response 
+follows a Binomial distribution, since the response variable is whether or not they have ever 
+had an affair. The model can be described as follows:
 
 $$ Y_i - Bernoulli(\mu_i) $$  
 $$log(\mu_i/1-\mu_i) = X_i\beta$$  
 
-$Y_i$: This is whether person i has ever had an affair. It follows a Bernoulli distribution for each individual and it linked to a linear combination of covariates using a logit link.  
+$Y_i$: This is whether person i has ever had an affair. It follows a Bernoulli distribution 
+for each individual and it linked to a linear combination of covariates using a logit link.  
 
 $\mu_i$: This is the probability that the ith person has ever had an affair.  
 
-$X_i$: This is a linear combination of covariates, consisting of `Children`, if the person has children, `aged` which is the Age variable centred at 32 for easy interpretation, `Gender` of person i, `Yearsmarried` which is how long person i has been married, and also `religious`, which is a factored variable determining how religious person i is. There is also an interaction term between gender and children.
+$X_i$: This is a linear combination of covariates, consisting of `Children`, if the person has children,
+`aged` which is the Age variable centred at 32 for easy interpretation, `Gender` of person i, `Yearsmarried` 
+which is how long person i has been married, and also `religious`, which is a factored variable determining 
+how religious person i is. There is also an interaction term between gender and children.
 
 $\beta$: Is the vector of coefficients.  
 
