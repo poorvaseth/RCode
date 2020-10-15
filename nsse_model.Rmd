@@ -1,5 +1,5 @@
 ---
-title: "model"
+title: "NSSE Model"
 author: "poorva seth"
 date: "16/06/2020"
 output: pdf_document
@@ -19,7 +19,11 @@ nsse_data$logdate <- NULL
 nsse_data_2014 <- subset(nsse_data, nsse_data$Year == '2014')
 ```
 
+# I started by importing the NSSE survey data. I had to build 4 models, individual models for each of the 2014 and 2017 datasets,
+# and further divided it by creating a separate model for first years and for fourth years.
 
+
+## Began by refactoring, renaming, and combining important variables. 
 ```{r ONT01 obstacles}
 nsse_data_2014$ONT01c <- ifelse(nsse_data_2014$ONT01c == 1, 0, 1)
 nsse_data_2014$ONT01d <- ifelse(nsse_data_2014$ONT01d == 1, 0, 1)
@@ -84,28 +88,39 @@ nsse_data_2014_first <- subset(nsse_data_2014, nsse_data_2014$IRclass == '1')
 nsse_data_2014_fourth <- subset(nsse_data_2014, nsse_data_2014$IRclass == '4')
 ```
 
-
-INPUTS: IRclass, LanguageBarrier, DisabilityBarrier, tmworkoffhrs, tmcarehrs, tmcommutehrs, re_white_ca, re_chin_ca, re_s_asia_ca, firstgen, begincol [0 means you started here], IRSex (0 meaning Female), ARTSC, APSC, ERIN, SCAR,internatYN
-
-#no sexual orientation in 2014 data
-
-ENVIRONMENTS: AcadPerformanceBarrier, ScheduleBarrier, AdvisingBarrier, NoCommunitySense, MoreProfContact, AcademicProbsInfo, tmworkonhrs, internship (would not let me separate by first or fourth years, but have done tables to show them in separate groups), HIP, athlete, combined_feedback, QI
+# Divided up which variables are 'input' variables, and which are 'environment' variables.
+INPUTS: IRclass, LanguageBarrier, DisabilityBarrier, tmworkoffhrs, tmcarehrs, tmcommutehrs, re_white_ca, 
+re_chin_ca, re_s_asia_ca, firstgen, begincol, IRSex (0 meaning Female), ARTSC, APSC, ERIN, SCAR,internatYN
 
 
-#build a model
+ENVIRONMENTS: AcadPerformanceBarrier, ScheduleBarrier, AdvisingBarrier, NoCommunitySense, MoreProfContact, AcademicProbsInfo, t
+mworkonhrs, internship (would not let me separate by first or fourth years, but have done tables to show them in separate groups), 
+HIP, athlete, combined_feedback, QI
+
+
+# Began to build a linear model for first years from the 2014 dataset. The response variable as SF (student faculty interactions), 
+# and used various predictors.
 ```{r model}
-sfmodel_2014_first <- lm(SF ~  Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + tmcarehrs + tmcommutehrs + re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + Male + ARTSC + ERIN + SCAR + APSC + AcadPerformanceBarrier + ScheduleBarrier + AdvisingBarrier + NoCommunitySense + MoreProfContact + AcademicProbsInfo + tmworkonhrs+ HIP + athlete + combined_feedback + QI , data = nsse_data_2014_first)
+sfmodel_2014_first <- lm(SF ~  Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + tmcarehrs + tmcommutehrs + 
+re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + Male + ARTSC + ERIN + SCAR + APSC + AcadPerformanceBarrier 
++ ScheduleBarrier + AdvisingBarrier + NoCommunitySense + MoreProfContact + AcademicProbsInfo + tmworkonhrs+ HIP + athlete + 
+combined_feedback + QI , data = nsse_data_2014_first)
 
 summary(sfmodel_2014_first)
 ```
+# Built another model for fourth years in 2014.
 
 ```{r fourth year model}
-sfmodel_2014_fourth <- lm(SF ~  Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + tmcarehrs + tmcommutehrs + re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + Male + ARTSC + ERIN + SCAR + APSC + AcadPerformanceBarrier + ScheduleBarrier + AdvisingBarrier + NoCommunitySense + MoreProfContact + AcademicProbsInfo + tmworkonhrs+ HIP + athlete + combined_feedback + QI , data = nsse_data_2014_fourth)
+sfmodel_2014_fourth <- lm(SF ~  Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + tmcarehrs + 
+tmcommutehrs + re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + Male + ARTSC + ERIN + 
+SCAR + APSC + AcadPerformanceBarrier + ScheduleBarrier + AdvisingBarrier + NoCommunitySense + MoreProfContact + 
+AcademicProbsInfo + tmworkonhrs+ HIP + athlete + combined_feedback + QI , data = nsse_data_2014_fourth)
 
 summary(sfmodel_2014_fourth)
 ```
 
-#working with 2017 data
+# Now I began to work with the 2017 dataset, same process as before. Factoring and renaming variables and then creating
+# two models.
 ```{r open data}
 nsse_data <- read_dta("/Users/evaseth/Desktop/NSSE.dta")
 nsse_data$logdate <- NULL
@@ -163,7 +178,8 @@ nsse_data_2017$ARTSC <- ifelse(nsse_data_2017$group1 == "ARTSC", "1", "0")
 nsse_data_2017$ERIN <- ifelse(nsse_data_2017$group1 == "ERIN", "1", "0")
 nsse_data_2017$SCAR <- ifelse(nsse_data_2017$group1 == "SCAR", "1", "0")
 nsse_data_2017$APSC <- ifelse(nsse_data_2017$group1 == "APSC", "1", "0")
-nsse_data_2017$Other_Faculty <- ifelse(nsse_data_2017$group1 == "ARCLA" |nsse_data_2017$group1 == "FPEH" | nsse_data_2017$group1 == "MUSIC" | nsse_data_2017$group1 == "NURS", "1", "0")
+nsse_data_2017$Other_Faculty <- ifelse(nsse_data_2017$group1 == "ARCLA" |nsse_data_2017$group1 ==
+"FPEH" | nsse_data_2017$group1 == "MUSIC" | nsse_data_2017$group1 == "NURS", "1", "0")
 
 #rename IRsex where being male means 1
 nsse_data_2017$Male <- ifelse(nsse_data_2017$IRsex == "1", "1", "0" )
@@ -177,14 +193,20 @@ nsse_data_2017_fourth <- subset(nsse_data_2017, nsse_data_2017$IRclass == '4')
 ```
 
 ```{r first year 2017model}
-sfmodel_2017_first <- lm(SF ~   Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + tmcarehrs + tmcommutehrs + re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + Male + ARTSC + ERIN + SCAR + APSC + AcadPerformanceBarrier + ScheduleBarrier + AdvisingBarrier + NoCommunitySense + MoreProfContact + AcademicProbsInfo + tmworkonhrs+ HIP + athlete + combined_feedback + QI , data = nsse_data_2017_first)
+sfmodel_2017_first <- lm(SF ~   Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + 
+tmcarehrs + tmcommutehrs + re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + 
+Male + ARTSC + ERIN + SCAR + APSC + AcadPerformanceBarrier + ScheduleBarrier + AdvisingBarrier + NoCommunitySense
++ MoreProfContact + AcademicProbsInfo + tmworkonhrs+ HIP + athlete + combined_feedback + QI , data = nsse_data_2017_first)
 
 summary(sfmodel_2017_first)
 ```
 
 
 ```{r fourth year 2017}
-sfmodel_2017_fourth <- lm(SF ~  Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + tmcarehrs + tmcommutehrs + re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + Male + ARTSC + ERIN + SCAR + APSC + AcadPerformanceBarrier + ScheduleBarrier + AdvisingBarrier + NoCommunitySense + MoreProfContact + AcademicProbsInfo + tmworkonhrs+ HIP + athlete + combined_feedback + QI , data = nsse_data_2017_fourth)
+sfmodel_2017_fourth <- lm(SF ~  Residency + LanguageBarrier + DisabilityBarrier + tmworkoffhrs + tmcarehrs + 
+tmcommutehrs + re_white_ca + re_chin_ca + re_s_asia_ca +  firstgen + internatYN + begincol + Male + ARTSC + ERIN + 
+SCAR + APSC + AcadPerformanceBarrier + ScheduleBarrier + AdvisingBarrier + NoCommunitySense + MoreProfContact + 
+AcademicProbsInfo + tmworkonhrs+ HIP + athlete + combined_feedback + QI , data = nsse_data_2017_fourth)
 
 summary(sfmodel_2017_fourth)
 ```
