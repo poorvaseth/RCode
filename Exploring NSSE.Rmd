@@ -21,6 +21,10 @@ nsse_data <- read_dta("/Users/evaseth/Desktop/NSSE.dta")
 nsse_data <- subset(nsse_data, nsse_data$Year == '2014')
 ```
 
+# This document is a rough start of how to begin to explore a new dataset. I compile basic descriptive statistics such as 
+# frequencies for each question and plot them to get an idea of how students answered the survey questions.
+
+
 ## using IRCLASS instead of ONT07: 
 
 
