@@ -1,0 +1,360 @@
+---
+title: "exploring variables"
+author: "poorva seth"
+date: "08/06/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("haven")
+#install.packages("tidyverse")
+#install.packages("plyr")
+#install.packages("lmtest")
+#install.packages(ggplot2)
+library(haven)
+library(tidyverse)
+library(plyr)
+library(lmtest)
+library(ggplot2)
+nsse_data <- read_dta("/Users/evaseth/Desktop/NSSE.dta")
+nsse_data <- subset(nsse_data, nsse_data$Year == '2014')
+```
+
+## using IRCLASS instead of ONT07: 
+
+
+```{r IRClass}
+irclass <- na.omit(count(nsse_data$IRclass))
+irclass
+
+Residence <- c("0 - No Residence", "1 - Yes Residence")
+Frequency <- c(irclass$freq[2], irclass$freq[1])
+dfnew <- data.frame(Residence, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+
+# if IRclass is '1' meaning first year that codes to 0, otherwise if its '4' it codes to 1
+nsse_data$residenceYN <- ifelse(nsse_data$IRclass == "1", "0", "1" )
+```
+
+
+
+
+## ONT11
+
+
+```{r ONT11 commute}
+counts <- count(nsse_data$ONT11) %>% mutate(proportion = freq / sum(freq))
+counts
+counts <- na.omit(counts) %>% mutate(x = as.factor(x))
+ggplot(counts, aes(x, freq)) + geom_bar(stat= "identity")
+```
+
+It seems surprising that majority of results were -9, which means student didn't recieve this question. meaning they answered "Yes" to living on residence or left that blank. I didn't think most
+students lived on residence, but perhaps many left the question blank. NA answers for ONT11 were omitted for the bar graph.
+
+## ONT01
+I want to focus on the subset of variables we're interested in (ONT01c/d/e/g/h)
+```{r ONT01 obstacles}
+ont01 <-(nsse_data[c("ONT01c", "ONT01d", "ONT01e", "ONT01g", "ONT01h")])
+ont01$ONT01c <- ifelse(ont01$ONT01c == 1, 0, 1)
+ont01$ONT01d <- ifelse(ont01$ONT01d == 1, 0, 1)
+ont01$ONT01e <- ifelse(ont01$ONT01e == 1, 0, 1)
+ont01$ONT01g <- ifelse(ont01$ONT01g == 1, 0, 1)
+ont01$ONT01h <- ifelse(ont01$ONT01h == 1, 0, 1)
+ont01 #view the table after conversion
+
+nsse_data <- nsse_data %>% mutate("ONT01c" = ont01[1],"ONT01d" = ont01[2], "ONT01e" = ont01[3], "ONT01g" = ont01[4], "ONT01h" = ont01[5] )
+# added this back to original dataframe
+```
+
+We want to group together the 1's (not an obstacle) and code them as 0. And then group together the 2's and 3's (obstacle) and code them as 1. We are more focused on whether or not these factors are an obstacle, as opposed to the extent of the obstacle. 
+
+## ONT05K
+
+```{r ONT05k sense of community}
+prop.table(table(nsse_data$ONT05k))
+
+```
+A large majority of students felt a sense of community on campus (about 84% vs. 16% who didnt).
+
+## ONT04a
+
+```{r ONT04a needs to address more contact w profs}
+prop.table(table(nsse_data$ONT04a))
+
+```
+
+About 27% of students who answered believe that increased contact with professors (e.g office hours) are part of the top 2 things that the university needs to address more. 
+
+## ONT06h
+```{r ONT06h quality of info regarding academic problems}
+counts_06h <- count(nsse_data$ONT06h)
+labels <- c("Very poor", "Poor", "Fair", "Good", "Very Good")
+
+counts_06h <- na.omit(counts_06h) %>% mutate(x = as.factor(x)) %>% mutate(Label = labels) %>% mutate(prop = freq / sum(freq)) 
+counts_06h
+ggplot(counts_06h, aes(Label, prop)) + geom_bar(stat= "identity")
+
+```
+
+Majority of students felt that the quality of information from the University regarding academic problems was "Poor" or "Fair". Very few (under 5%) said "Very good". 
+
+## tm questions
+
+These tables explore proportions of students for the hours they work on campus, off campus, commuting, and caring for a dependent.
+```{r tmworkoff/on/care/commute}
+count(nsse_data$tmworkonhrs) %>% mutate(prop = freq / sum(freq))
+count(nsse_data$tmworkoffhrs) %>% mutate(prop = freq / sum(freq))
+count(nsse_data$tmcarehrs) %>% mutate(prop = freq / sum(freq))
+count(nsse_data$tmcommutehrs) %>% mutate(prop = freq / sum(freq))
+
+```
+
+## etnicity questions
+
+Question 33a) asks which ethnicites best describe you. There's a lot of different categories, so we can look at the frequencies and then categorize minorities together. 
+
+NOTE: no indigeneous category was given in the dataset
+```{r ethnicity, echo=FALSE}
+count(nsse_data$re_white_ca) %>% mutate(prop = freq / sum(freq)) # 28 % said yes for White
+count(nsse_data$re_chin_ca) %>% mutate(prop = freq / sum(freq)) # 22 % said yes for Chinese
+count(nsse_data$re_s_asia_ca) %>% mutate(prop = freq / sum(freq)) # 13 % said yes for South Asian
+```
+
+The above 3 tables are for white, chinese, and south asian respectively. Note that '1' indicates the student did select that they identify with this ethnicity, and '0' means they didn't. We can see that 28% said yes for Whites, 22% said yes for Chinese, and 13% said yes for south asian.  The below tables are for blacks, filipinos, latinos, and other minority groups.
+
+
+```{r ethnicity minorities, echo=FALSE}
+count(nsse_data$re_black_ca) %>% mutate(prop = freq / sum(freq))# 3 % said yes for Black
+count(nsse_data$re_phil_ca) %>% mutate(prop = freq / sum(freq)) # 3 % said yes for Filipino 
+count(nsse_data$re_latino_ca) %>% mutate(prop = freq / sum(freq)) # 2.5 % said yes for Latino
+count(nsse_data$re_se_asia_ca) %>% mutate(prop = freq / sum(freq)) # 2.5% said yes for southeast       asian
+count(nsse_data$re_arab_ca) %>% mutate(prop = freq / sum(freq)) # 3 % said yes for arabic
+count(nsse_data$re_w_asia_ca) %>% mutate(prop = freq / sum(freq)) # 2 % said yes for asian
+count(nsse_data$re_japan_ca) %>% mutate(prop = freq / sum(freq)) # .07 % said yes for japanese
+count(nsse_data$re_korea_ca) %>% mutate(prop = freq / sum(freq)) # 2.6 % said yes for korean
+
+nsse_data$other_ethnicity <- ifelse(nsse_data$re_black_ca | nsse_data$re_phil_ca | nsse_data$re_latino_ca | nsse_data$re_se_asia_ca | nsse_data$re_arab_ca | nsse_data$re_w_asia_ca | nsse_data$re_japan_ca | nsse_data$re_korea_ca,  "1", "0")
+
+# if you said "Yes" to any of the minority ethnicities, you will be be included in another category called 'other_ethnicity'
+```
+
+It seems like the largest categories are the first 3: White, Chinese, and South Asian. Perhaps can do 3 categories for these, then 1 other category which groups the rest together. 
+
+Not sure how to group the minorities together
+
+
+
+## parent education status
+
+The variable firstgen nicely divides parents education status by bachelors degree/ no bachelors degree. 
+
+``` {r firstgen}
+count(nsse_data$firstgen) %>% mutate(prop = freq / sum(freq))
+```
+
+Majority of students (around 71%) are not first generation (so they have a parent who holds a bachelors degree)
+
+## sexual orientation
+```{r sexorient17, echo=FALSE}
+
+
+sexorient <- na.omit(count(nsse_data$sexorient17))
+sexorient
+
+Orientation <- c("0", "1")
+Frequency <- c(sexorient$freq[1], sum(sexorient$freq) - sexorient$freq[1])
+dfnew <- data.frame(Orientation, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+
+nsse_data$sexual_orientation <- ifelse(nsse_data$sexorient17 == "1", "0", "Other" )
+
+```
+
+First I omitted NA variables from sexorient question, then I created new dataframe with two variables 'straight' being 0 and all other orientations being 1.
+About 84% of students identify as straight, and 16% identify with other sexual orientations (e.g gay, bisexual, queer, questioning)
+
+## transfer student
+
+```{r begincol}
+na.omit(count(nsse_data$begincol)) %>% mutate(prop = freq / sum(freq))
+```
+About 5% of students who answered began college at a different institution. 
+
+## Gender identity
+
+# USE IRSEX INSTEAD
+```{r IRsex}
+genderid <- na.omit(count(nsse_data$IRsex))
+
+#Create new dataframe with two variables 'Male' being 0 and all other identities being 1
+Identity <- c("0 - Female", "1 - Male")
+Frequency <- c(genderid$freq[1], sum(genderid$freq) - genderid$freq[1])
+dfnew <- data.frame(Identity, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+
+nsse_data$Male <- ifelse(nsse_data$IRsex == "1", "Male", "Other" )
+
+```
+
+## first year intern
+First years: 
+```{r first year intern}
+first_years <- subset(nsse_data, nsse_data$IRclass == "1")
+first_year_intern <- na.omit(count(first_years$intern)) %>% mutate(Proportion = freq/ sum(freq))
+first_year_intern 
+
+```
+
+15% said they havent decided to participate in an internship, 6% said do not plan to, 73% said they plan on it, and 5% said they have already done or are in progress of an internship. Since we only care about what has been done until this moment, I will group it by either 'done/in progress' or 
+'not done'.
+
+```{r first year intern grouped}
+Status <- c("Done or in progress", "Not Done")
+Frequency <- c(first_year_intern$freq[4], sum(first_year_intern$freq) - first_year_intern$freq[4])
+dfnew <- data.frame(Status, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+
+
+```
+## fourth year intern
+Fourth Years: 
+```{r fourth year intern}
+fourth_years <- subset(nsse_data, nsse_data$IRclass == "4")
+fourth_year_intern <- na.omit(count(fourth_years$intern)) %>% mutate(Proportion = freq/ sum(freq))
+fourth_year_intern 
+
+```
+
+12% said they havent decided to participate in an internship, 22% said do not plan to, 20% said they plan on it, and 46% said they have already done or are in progress of an internship. Since we only care about what has been done until this moment, I will group it by either 'done/in progress' or 
+'not done'.
+
+```{r fourth year intern grouped}
+Status <- c("Done or in progress", "Not Done")
+Frequency <- c(fourth_year_intern$freq[4], sum(fourth_year_intern$freq) - fourth_year_intern$freq[4])
+dfnew <- data.frame(Status, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+```
+
+```{r internship} 
+nsse_data$internship <- ifelse(!nsse_data$intern == "4", "0", "1")
+# It's a 0 if they have not done it yet
+```
+
+
+## abroad
+
+```{r abroad}
+abroad <- na.omit(count(nsse_data$abroad)) %>% mutate(Proportion = freq/ sum(freq))
+abroad
+```
+
+21% said they havent decided to go abroad, 42% said do not plan to, 28% said they plan on it, and 7% said they have already done or are in progress of an internship. Since we only care about what has been done until this moment, I will group it by either 'done/in progress' or 
+'not done'.
+
+```{r abroad grouped}
+Status <- c("Done or in progress", "Not Done")
+Frequency <- c(abroad$freq[4], sum(abroad$freq) - abroad$freq[4])
+dfnew <- data.frame(Status, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+
+
+```
+
+## research
+
+```{r research}
+research <- na.omit(count(nsse_data$research)) %>% mutate(Proportion = freq/ sum(freq))
+research
+```
+```{r research grouped}
+Status <- c("Done or in progress", "Not Done")
+Frequency <- c(research$freq[4], sum(research$freq) - research$freq[4])
+dfnew <- data.frame(Status, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+```
+
+## question 12 servcourse
+```{r community based}
+community_based <- na.omit(count(nsse_data$servcourse)) 
+labels <- c("None", "Some", "Most", "All")
+community_based <- community_based %>% mutate(label = labels) %>% mutate(Proportion = freq/ sum(freq))
+```
+I have divided this question into 0/1, where "None" is 0, and "at least 1" is 1.
+
+```{r grouped community based}
+labels <- c("0 - None", "1 - At least one")
+Frequency <- c(community_based$freq[1], sum(community_based$freq) - community_based$freq[1])
+dfnew <- data.frame(labels, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+```
+
+
+```{r hip FY???}
+count(nsse_data$HIP)
+
+```
+
+## athlete
+
+```{R athlete}
+labels <- c("No", "Yes")
+na.omit(count(nsse_data$athlete)) %>% mutate(Proportion = freq/ sum(freq)) %>% 
+  mutate(label = labels)
+
+```
+95% said No to being an athlete. 
+
+## faculty 
+```{r faculty}
+faculties <- count(nsse_data$group1)
+faculties
+
+Faculties <- c("ARTSC", "APSC", "ERIN", "SCAR", "OTHER")
+Frequency <- c(faculties$freq[3], faculties$freq[1], faculties$freq[4], faculties$freq[8], sum(faculties$freq[2], faculties$freq[5], faculties$freq[6], faculties$freq[7]))
+dfnew <- data.frame(Faculties, Frequency) %>% mutate(Proportion = Frequency / sum(Frequency))
+dfnew
+
+ggplot(dfnew, aes(Faculties, Frequency)) + geom_bar(stat= "identity")
+
+nsse_data$ARTSC <- ifelse(nsse_data$group1 == "ARTSC", "1", "0")
+nsse_data$ERIN <- ifelse(nsse_data$group1 == "ERIN", "1", "0")
+nsse_data$SCAR <- ifelse(nsse_data$group1 == "SCAR", "1", "0")
+nsse_data$APSC <- ifelse(nsse_data$group1 == "APSC", "1", "0")
+nsse_data$Other_Faculty <- ifelse(nsse_data$group1 == "ARCLA" |nsse_data$group1 == "FPEH" | nsse_data$group1 == "MUSIC" | nsse_data$group1 == "NURS", "1", "0")
+```
+I grouped together the four smallest faculties. 
+
+## feedback
+
+``` {r feedback}
+#draft <- table(nsse_data$ETdraftfb)
+#fb <- table(nsse_data$ETfeedback)
+#sum_feedback <- colSums(bind_rows(draft, fb))
+#sum_feedback
+
+#OR do you want it out of 8?
+nsse_data$combined_feedback <- rowSums(nsse_data[,c(30,31)], na.rm = TRUE)
+count(nsse_data$combined_feedback)
+```
+This new dataframe 'feedback' sums the draft and feedback values.
+Not sure how to add this as a new variable in the nsse_data frame?
+
+
+## QI
+
+```{r qi}
+qi <- count(nsse_data$QI)
+qi <-qi%>%mutate("QI Score" = x) %>% mutate(proportion = freq/sum(freq)) 
+qi <- qi[order(-qi$freq), ]
+qi
+```
+
+This QI Variable is out of 60 and the table is sorted with descending frequency.
+
+## internat
+```{r internatca}
+nsse_data$internatYN <- ifelse(nsse_data$internat_ca == '3', 'Canadian Citizen', 'Other')
+
+```
