@@ -4,3 +4,5 @@ STA442, and some is work I created during my Summer 2020 work-study term as a Da
 
 The STA442 document is an indicator of how I built GLM models, and how I interpreted these models to write reports addressing various research hypotheses.
 The nsse_model document showcases how I prepare datasets for analyzing, by refactoring, renaming and combining variables. I built simple linear models to address what predictors are significant predictors of student faculty interactions.
+ 
+The exploring_nsse document indicates how I begin to explore a dataset in the rudimentary stages of analyzing. This involves compiling basic descriptive statistics and frequency plots to get an idea of how students responded to each survey question. 
