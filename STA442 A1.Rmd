@@ -33,6 +33,7 @@ $$log(\mu_i/1-\mu_i) = X_i\beta$$
 $Y_i$: This is whether person i has ever had an affair. It follows a Bernoulli distribution 
 for each individual and it linked to a linear combination of covariates using a logit link.  
 
+
 $\mu_i$: This is the probability that the ith person has ever had an affair.  
 
 $X_i$: This is a linear combination of covariates, consisting of `Children`, if the person has children,
